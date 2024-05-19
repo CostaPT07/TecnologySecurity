@@ -1,37 +1,44 @@
-# Projeto SI (Segurança Informática)
+# ESTOU-TA-VER: um Monitor para Integridade para Diretorias
 
 ## Descrição
-Este projeto consiste na implementação de um programa de monitoramento de integridade para diretórios em Python. O programa utiliza funções de hash, cifras e HMAC para detectar alterações nos ficheiros dentro de um diretório selecionado pelo utilizador.
+
+ESTOU-TA-VER é um programa que monitora a integridade dos ficheiros dentro de uma diretoria especificada. Utiliza funções de hash, assinaturas digitais, e cifragem para detetar alterações nos ficheiros. Este programa é útil para garantir que os ficheiros não foram modificados, garantindo a integridade e segurança dos dados.
 
 ## Funcionalidades
-- Calcula valores de hash SHA256 para todos os ficheiros num diretório.
-- Cifra o ficheiro da base de dados com AES-128-CBC usando uma chave derivada de uma senha do utilizador.
-- Armazena HMAC-SHA512 juntamente com os valores de hash e nomes de ficheiros na base de dados.
-- Verifica a integridade dos ficheiros e notifica o utilizador sobre alterações detetadas.
-- Gera e armazena uma nova base de dados atualizada em caso de alterações nos ficheiros.
 
-## Requisitos de Instalação
-- Python 3.x
-- Bibliotecas Python: hashlib, cryptography
+- **Execução isolada**: O programa funciona apenas quando executado pelo utilizador.
+- **Cálculo de Hash SHA256**: Calcula valores de hash SHA256 para todos os ficheiros na diretoria monitorada.
+- **Cifragem da Base de Dados**: Cifra a base de dados com AES-128-CBC usando uma chave derivada de uma palavra-passe.
+- **Assinaturas Digitais RSA**: Utiliza assinaturas digitais RSA para garantir a integridade dos ficheiros.
+- **Monitoramento em Tempo Real**: Pode ser executado como um serviço em segundo plano, detetando alterações em tempo real.
+- **Help Detalhado**: Inclui uma ajuda detalhada com instruções de uso, instalação e detalhes de implementação.
 
-## Instruções de Uso
-1. Clone este repositório no seu computador.
-2. Ative o ambiente virtual (se estiver a usar um).
-3. Instale as dependências do projeto:
+## Requisitos
 
-"pip install -r requirements.txt"
+- Python 3.6 ou superior
+- Bibliotecas: watchdog, cryptography, rich
 
-4. Execute o programa principal:
+## Instalação
 
+1. Clone o repositório:
+    ```bash
+    git clone https://github.com/CostaPT07/TecnologySecurity.git
+    cd estou-ta-ver
+    ```
+
+2. Crie e ative um ambiente virtual (opcional, mas recomendado):
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # No Windows, use `venv\Scripts\activate`
+    ```
+
+3. Instale as dependências:
+    ```bash
+    pip install watchdog cryptography rich
+    ```
+
+## Uso
+
+Execute o script principal:
+```bash
 python main.py
-
-## Exemplo de Uso
-- Após executar o programa, será solicitado a selecionar um diretório para monitorar.
-- O programa calculará os valores de hash dos ficheiros no diretório e os armazenará numa base de dados cifrada.
-- Nas execuções subsequentes, o programa verificará a integridade dos ficheiros e notificará sobre quaisquers alterações detetadas.
-
-## Contribuições
-Contribuições são bem-vindas! Sinta-se à vontade para enviar pull requests com melhorias, correções de bugs, etc.
-
-## Licença
-Este projeto é licenciado sob a [MIT License](LICENSE).

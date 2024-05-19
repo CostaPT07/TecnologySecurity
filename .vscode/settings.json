@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./projeto_si/src"
+    ]
+}
