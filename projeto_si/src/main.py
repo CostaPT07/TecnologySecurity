@@ -1,7 +1,6 @@
 import os
 import hashlib
 import json
-import hmac
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -17,8 +16,6 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 console = Console()
-
-project_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Função para derivar a chave - PBKDF2
 def derive_key(password, salt, length=32):
@@ -200,15 +197,36 @@ def check_integrity(directory, password):
     with open(db_path, 'r') as f:
         file_data = json.load(f)
 
-    for file_path, stored_values in file_data.items():
+    current_files = set(os.path.join(root, file) for root, dirs, files in os.walk(directory) for file in files)
+    db_files = set(file_data.keys())
+
+    # Verificar arquivos deletados
+    for file_path in db_files - current_files:
+        console.print(f"[red]Ficheiro removido: {file_path}[/red]")
+        del file_data[file_path]
+
+    # Verificar arquivos adicionados e modificados
+    for file_path in current_files:
         current_hash = calculate_hash(file_path)
         if current_hash is None:
             continue
-        signature = base64.b64decode(stored_values['signature'])
-        if current_hash != stored_values['hash'] or not verify_signature(stored_values['hash'].encode(), signature, public_key):
-            console.print(f"[red]Alteração detetada no ficheiro: {file_path}[/red]")
-            file_data[file_path]['hash'] = current_hash
-            file_data[file_path]['signature'] = base64.b64encode(sign_data(current_hash.encode(), private_key)).decode('utf-8')
+
+        if file_path not in file_data:
+            console.print(f"[green]Ficheiro adicionado: {file_path}[/green]")
+            signature = sign_data(current_hash.encode(), private_key)
+            file_data[file_path] = {
+                'hash': current_hash,
+                'signature': base64.b64encode(signature).decode('utf-8')
+            }
+        else:
+            stored_values = file_data[file_path]
+            stored_hash = stored_values['hash']
+            signature = base64.b64decode(stored_values['signature'])
+            if current_hash != stored_hash:
+                console.print(f"[yellow]Alteração detetada no ficheiro: {file_path}[/yellow]")
+                signature = sign_data(current_hash.encode(), private_key)
+                file_data[file_path]['hash'] = current_hash
+                file_data[file_path]['signature'] = base64.b64encode(signature).decode('utf-8')
 
     with open(db_path, 'w') as f:
         json.dump(file_data, f)
@@ -223,6 +241,16 @@ class Watcher(FileSystemEventHandler):
     def on_modified(self, event):
         if not event.is_directory:
             console.print(f"[yellow]Ficheiro modificado: {event.src_path}[/yellow]")
+            check_integrity(self.directory, self.password)
+
+    def on_created(self, event):
+        if not event.is_directory:
+            console.print(f"[green]Ficheiro adicionado: {event.src_path}[/green]")
+            check_integrity(self.directory, self.password)
+
+    def on_deleted(self, event):
+        if not event.is_directory:
+            console.print(f"[red]Ficheiro removido: {event.src_path}[/red]")
             check_integrity(self.directory, self.password)
 
 def start_monitoring(directory, password):
